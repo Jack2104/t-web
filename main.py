@@ -1,25 +1,23 @@
 import os
 import requests
+import rich
 from bs4 import BeautifulSoup
 
 TEXT_TAGS = ["p", "h1", "h2", "h3", "h4", "h5", "h6", "code"]
 page_links = []
 
 
-def displayPage(url):
+def display_page(url):
     global page_links
 
     def parseTagWithoutChildren(tag):
         if tag.name in TEXT_TAGS:
-            print(tag.text)
-            return tag.content
+            return f"{tag.text}\n\n"
         elif tag.name == "a":
-            print(tag.text)
             page_links.append(tag.get("href"))
-            return f"({len(page_links)}) {tag.content}\n\n"
+            return f"({len(page_links)}) {tag.text}\n\n"
         elif tag.name == "li":
-            print(tag.text)
-            return f"- {tag.content}\n\n"
+            return f"  - {tag.text}\n\n"
 
         return ""
 
@@ -55,26 +53,16 @@ def displayPage(url):
         print("This page cannot be displayed.")
         return
 
-    body = soup.body  # It's assumed that every website will have this tag
-    # contents = body.children
-
-    # print(body.find_all())
-
+    body = soup.body  # Every website should have this tag
     page_content = ""
 
-    # Recursively find all of the page content
-    # for tag in contents:
-    #     print(tag)
-    #     page_content += parseTag(tag)
-
     for tag in body.find_all():
-        # print(tag)
         try:
             page_content += parseTagWithoutChildren(tag)
         except:
             pass
 
-    # print(page_content)
+    print(page_content)
 
 
 if __name__ == "__main__":
@@ -98,7 +86,8 @@ if __name__ == "__main__":
 
         url
 
-    displayPage(url)
+    display_page(url)
 
 # Test URL 1: https://www.crummy.com/software/BeautifulSoup/bs4/doc/#going-down
 # Test URL 2: http://motherfuckingwebsite.com
+# Test URL 3: https://perfectmotherfuckingwebsite.com
