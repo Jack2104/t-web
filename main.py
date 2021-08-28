@@ -1,48 +1,38 @@
 import os
 import requests
-import rich
+from rich.console import Console
 from bs4 import BeautifulSoup
 
-TEXT_TAGS = ["p", "h1", "h2", "h3", "h4", "h5", "h6", "code"]
+TAG_STYLES = {
+    "p": "%s\n\n",
+    "h1": "[bold underline]## %s ##[/]\n",
+    "h2": "[bold underline]%s[/]\n",
+    "h3": "[bold]%s[/]\n",
+    "h4": "[italic underline]%s[/]\n",
+    "h5": "[italic]%s[/]\n",
+    "h6": "%s\n",
+    "aside": "[dim]%s[/]\n\n",
+    "li": " [yellow]• %s[/]\n\n",
+    "code": "%s\n\n",
+    "a": "[#3b9dff underline](%i) %s[/]",
+}
+console = Console(highlight=False)
+
 page_links = []
 
 
 def display_page(url):
     global page_links
 
-    def parseTagWithoutChildren(tag):
-        if tag.name in TEXT_TAGS:
-            return f"{tag.text}\n\n"
-        elif tag.name == "a":
-            page_links.append(tag.get("href"))
-            return f"({len(page_links)}) {tag.text}\n\n"
-        elif tag.name == "li":
-            return f"  - {tag.text}\n\n"
+    def parse_tag(tag):
+        if tag.name in TAG_STYLES:
+            if tag.name == "a":
+                page_links.append(tag.get("href"))
+                return TAG_STYLES["a"] % (len(page_links), tag.text) + "\n\n"
+
+            return TAG_STYLES[tag.name] % tag.text
 
         return ""
-
-    def parseTag(tag):
-        tag_contents = ""
-
-        try:
-            tag_children = tag.children
-            child_count = len(tag_children)
-        except:
-            tag_contents = parseTagWithoutChildren(tag)
-            return tag_contents
-
-        for index in range(child_count):
-            tag = tag_children[index]
-
-            if (child_text := parseTagWithoutChildren(tag)) != "":
-                tag_contents += child_text
-            elif tag.name == "li":
-                list_item = f"- {tag.content}\n" if index < child_count else f"- {tag.content}\n\n"
-                tag_contents += list_item
-            elif tag.children:
-                tag_contents += parseTag(tag)
-
-        return tag_contents
 
     os.system("clear")
 
@@ -50,7 +40,7 @@ def display_page(url):
         request = requests.get(url)
         soup = BeautifulSoup(request.text, "lxml")
     except:
-        print("This page cannot be displayed.")
+        print("[red]This page cannot be displayed.[/]")
         return
 
     body = soup.body  # Every website should have this tag
@@ -58,11 +48,11 @@ def display_page(url):
 
     for tag in body.find_all():
         try:
-            page_content += parseTagWithoutChildren(tag)
+            page_content += parse_tag(tag)
         except:
             pass
 
-    print(page_content)
+    console.print(page_content)
 
 
 if __name__ == "__main__":
@@ -70,24 +60,13 @@ if __name__ == "__main__":
 
     query = input("Search: ")
     search_terms = query.split()
-    search_term_count = len(search_terms)
 
-    url = ""
-
-    if query.startswith("http"):
-        url = query.join(search_terms)
-    else:
-        url = "https://www.google.com/search?q="
-
-        for index in range(search_term_count):
-            word = search_terms[index]
-
-            url += word + "+" if index < (search_term_count - 1) else word
-
-        url
+    # For now, only supports urls (not organic searches)
+    url = query.join(search_terms)
 
     display_page(url)
 
 # Test URL 1: https://www.crummy.com/software/BeautifulSoup/bs4/doc/#going-down
 # Test URL 2: http://motherfuckingwebsite.com
 # Test URL 3: https://perfectmotherfuckingwebsite.com
+# Test URL 4: http://txti.es/dj8g2
