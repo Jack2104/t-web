@@ -78,12 +78,10 @@ def display_page(url):
     page_content = ""
 
     for tag in body.find_all(recursive=False):
-        page_content += parse_tag(tag)
-
-        # try:
-        #     page_content += parse_tag(tag)
-        # except:
-        #     pass
+        try:
+            page_content += parse_tag(tag)
+        except:
+            pass
 
     console.print(page_content)
 
