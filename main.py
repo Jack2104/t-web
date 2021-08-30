@@ -3,6 +3,7 @@ import requests
 from rich.console import Console
 from bs4 import BeautifulSoup
 
+list_tags = ["li", "dt", "dd"]
 TAG_STYLES = {
     "p": "%s\n\n",
     "h1": "[#ffffff bold underline]## %s ##[/]\n",
@@ -60,7 +61,7 @@ def display_page(url):
                 tag_content += parse_tag(child_tag)
 
                 # Add two newlines if the child is the final list item
-                if child_tag.name == "li" and index == len(children) - 1:
+                if child_tag.name in list_tags and index == len(children) - 1:
                     tag_content += "\n"
 
         return tag_content
