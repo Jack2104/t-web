@@ -5,11 +5,11 @@ from bs4 import BeautifulSoup
 
 TAG_STYLES = {
     "p": "%s\n\n",
-    "h1": "[bold underline]## %s ##[/]\n",
-    "h2": "[bold underline]%s[/]\n",
-    "h3": "[bold]%s[/]\n",
-    "h4": "[italic underline]%s[/]\n",
-    "h5": "[italic]%s[/]\n",
+    "h1": "[#ffffff bold underline]## %s ##[/]\n",
+    "h2": "[#ffffff bold underline]%s[/]\n",
+    "h3": "[#ffffff bold]%s[/]\n",
+    "h4": "[#ffffff italic underline]%s[/]\n",
+    "h5": "[#ffffff italic]%s[/]\n",
     "h6": "%s\n",
     "aside": "[dim]%s[/]\n\n",
     "li": " [yellow]• %s[/]\n",
