@@ -1,3 +1,4 @@
+import json
 import os
 import requests
 from rich.console import Console
@@ -87,16 +88,42 @@ def display_page(url):
     console.print(page_content)
 
 
+def get_bookmarks():
+    if not os.path.exists("./bookmarks.json"):
+        with open("bookmarks.json", "w+") as json_file:
+            json.dump([], json_file)
+            return []
+
+    with open("bookmarks.json") as json_file:
+        return json.load(json_file)
+
+
 if __name__ == "__main__":
     os.system("clear")
+
+    bookmarks = get_bookmarks()
 
     query = input("Search: ")
     search_terms = query.split()
 
-    # For now, only supports urls (not organic searches)
-    url = query.join(search_terms)
+    if search_terms[0] == "-b" and len(search_terms) >= 3:
+        bookmark_url = search_terms[1]
+        bookmark_name = " ".join(search_terms[2:])
 
-    display_page(url)
+        bookmark = {
+            "url": bookmark_url,
+            "name": bookmark_name
+        }
+
+        bookmarks.append(bookmark)
+
+        with open("bookmarks.json", "w+") as json_file:
+            json.dump(bookmarks, json_file)
+    else:
+        # For now, only supports urls (not organic searches)
+        url = query.join(search_terms)
+
+        display_page(url)
 
 # Test URL 1: https://www.crummy.com/software/BeautifulSoup/bs4/doc/#going-down
 # Test URL 2: http://motherfuckingwebsite.com
