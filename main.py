@@ -2,6 +2,8 @@ import json
 import os
 import requests
 from rich.console import Console
+import sys
+
 from bs4 import BeautifulSoup
 
 list_tags = ["li", "dt", "dd"]
@@ -73,7 +75,7 @@ def display_page(url):
         request = requests.get(url)
         soup = BeautifulSoup(request.text, "lxml")
     except:
-        print("[red]This page cannot be displayed.[/]")
+        console.print("[red]This page cannot be displayed.[/]")
         return
 
     body = soup.body  # Every website should have this tag
@@ -99,31 +101,37 @@ def get_bookmarks():
 
 
 if __name__ == "__main__":
-    os.system("clear")
-
     bookmarks = get_bookmarks()
 
-    query = input("Search: ")
-    search_terms = query.split()
+    os.system("clear")
 
-    if search_terms[0] == "-b" and len(search_terms) >= 3:
-        bookmark_url = search_terms[1]
-        bookmark_name = " ".join(search_terms[2:])
+    while True:
+        query = input("Search: ")
+        search_terms = query.split()
 
-        bookmark = {
-            "url": bookmark_url,
-            "name": bookmark_name
-        }
+        if search_terms[0] == "-b" and len(search_terms) >= 3:
+            bookmark_url = search_terms[1]
+            bookmark_name = " ".join(search_terms[2:])
 
-        bookmarks.append(bookmark)
+            bookmark = {
+                "url": bookmark_url,
+                "name": bookmark_name
+            }
 
-        with open("bookmarks.json", "w+") as json_file:
-            json.dump(bookmarks, json_file)
-    else:
-        # For now, only supports urls (not organic searches)
-        url = query.join(search_terms)
+            bookmarks.append(bookmark)
 
-        display_page(url)
+            with open("bookmarks.json", "w+") as json_file:
+                json.dump(bookmarks, json_file)
+        elif search_terms[0] == "-q" and len(search_terms) == 1:
+            sys.exit()
+        else:
+            os.system("clear")
+
+            # For now, only supports urls (not organic searches)
+            url = query.join(search_terms)
+
+            display_page(url)
+            print()
 
 # Test URL 1: https://www.crummy.com/software/BeautifulSoup/bs4/doc/#going-down
 # Test URL 2: http://motherfuckingwebsite.com
