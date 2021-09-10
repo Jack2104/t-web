@@ -106,6 +106,16 @@ class WebPage(Page):
         return page_content
 
 
+class BookmarksPage(Page):
+    def get_page_content(self):
+        pass
+
+
+class HistoryPage(Page):
+    def get_page_content(self):
+        pass
+
+
 def get_bookmarks():
     if not os.path.exists("./bookmarks.json"):
         with open("bookmarks.json", "w+") as json_file:
