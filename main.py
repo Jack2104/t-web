@@ -23,10 +23,13 @@ TAG_STYLES = {
 console = Console(highlight=False)
 
 page_links = []
+history = []
 
 
 def display_page(url):
     global page_links
+
+    history.append(url)
 
     def parse_tag(tag):
         # This will occur if the link is standalone (i.e. not in-line)
