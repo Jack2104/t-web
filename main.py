@@ -29,6 +29,10 @@ history = []
 
 class Page(ABC):  # Create an abstract class
     @abstractmethod
+    def __init__(self):
+        self.page_links = []
+
+    @abstractmethod
     def get_page_content(self):
         pass
 
@@ -41,10 +45,12 @@ class Page(ABC):  # Create an abstract class
 
 class WebPage(Page):
     def __init__(self, url):
-        self.url = url
-        self.page_links = []
+        super().__init__()
 
-        history.append(url)
+        self.url = url
+
+        if len(history) == 0 or history[-1] != url:
+            history.append(url)
 
     def parse_tag(self, tag):
         # This will occur if the link is standalone (i.e. not in-line)
@@ -95,25 +101,59 @@ class WebPage(Page):
             return "[red]This page cannot be displayed.[/]"
 
         body = soup.body  # Every website should have this tag
-        page_content = ""
+        content = ""
 
         for tag in body.find_all(recursive=False):
             try:
-                page_content += self.parse_tag(tag)
+                content += self.parse_tag(tag)
             except:
                 pass
 
-        return page_content
+        return content
 
 
 class BookmarksPage(Page):
+    def __init__(self):
+        super().__init__()
+
+        for bookmark in bookmarks:
+            self.page_links = bookmark["url"]
+
+    def format_bookmark(self, bookmark, bookmark_number):
+        return f"[green]({bookmark_number}) {bookmark['name']}[/] [#3b9dff]\n{bookmark['url']}[/]"
+
     def get_page_content(self):
-        pass
+        content = TAG_STYLES["h1"] % "Bookmarks"
+
+        for index in range(len(bookmarks)):
+            bookmark = bookmarks[index]
+            content += self.format_bookmark(bookmark, index + 1)
+
+            if index < len(bookmarks) - 1:
+                content += "\n\n"
+
+        if len(bookmarks) == 0:
+            content = "[green]You don't have any bookmarks yet! Try adding one with the -nb command[/]"
+
+        return content
 
 
 class HistoryPage(Page):
+    def __init__(self):
+        super().__init__()
+        self.page_links = history
+
     def get_page_content(self):
-        pass
+        content = TAG_STYLES["h1"] % "History"
+
+        for index in range(len(history)):
+            link = history[index]
+            content += f"[#3b9dff]({index + 1}) {link}[/]"
+
+            if index < len(history) - 1:
+                content += "\n\n"
+
+        return content
 
 
 def get_bookmarks():
@@ -136,7 +176,7 @@ if __name__ == "__main__":
         query = input("Search: ")
         search_terms = query.split()
 
-        if search_terms[0] == "-b" and len(search_terms) >= 3:
+        if search_terms[0] == "-nb" and len(search_terms) >= 3:
             bookmark_url = search_terms[1]
             bookmark_name = " ".join(search_terms[2:])
 
@@ -149,6 +189,16 @@ if __name__ == "__main__":
 
             with open("bookmarks.json", "w+") as json_file:
                 json.dump(bookmarks, json_file)
+
+        elif search_terms[0] == "-sb" and len(search_terms) == 1:
+            bookmarks_page = BookmarksPage()
+            bookmarks_page.display_page()
+            print()
+
+        elif search_terms[0] == "-sh" and len(search_terms) == 1:
+            history_page = HistoryPage()
+            history_page.display_page()
+            print()
 
         elif search_terms[0] == "-q" and len(search_terms) == 1:
             sys.exit()
