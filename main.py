@@ -1,11 +1,12 @@
 import json
 import os
+import re
 import requests
-from rich.console import Console
 import sys
 
 from abc import ABC, abstractmethod
 from bs4 import BeautifulSoup
+from rich.console import Console
 
 list_tags = ["li", "dt", "dd"]
 TAG_STYLES = {
@@ -25,6 +26,14 @@ console = Console(highlight=False)
 
 page_links = []
 history = []
+
+commands = {
+
+}
+
+operators = {
+
+}
 
 
 class Page(ABC):  # Create an abstract class
@@ -154,6 +163,21 @@ class HistoryPage(Page):
                 content += "\n\n"
 
         return content
+
+
+class SearchBar:
+    def __init__(self):
+        console.input(
+            "[#5185EC]S[/][#D85040]e[/][[#5185EC]a[/][#D8BE42]r[/][#58A55C]c[/][#D85040]h[/]: ")
+
+    def parse_input(self, query):
+        # Escape all special characters the user inputs, for the regex
+        query = re.escape(query)
+
+        "\\*\d+"
+
+        if query[0] == "-":  # A command
+            pass
 
 
 def get_bookmarks():
