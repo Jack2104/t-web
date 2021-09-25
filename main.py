@@ -27,13 +27,60 @@ console = Console(highlight=False)
 page_links = []
 history = []
 
-commands = {
 
-}
+def construct_url(query):
+    query_list = query.split()
 
-operators = {
+    if not query.startswith("https://"):
+        url = "http://www.google.com/search?q="
 
-}
+        for query_item in query_list:
+            url += f"{query_item}+"
+
+        return url
+
+    return "".join(query_list)
+
+
+def get_bookmarks():
+    if not os.path.exists("./bookmarks.json"):
+        with open("bookmarks.json", "w+") as json_file:
+            json.dump([], json_file)
+            return []
+
+    with open("bookmarks.json") as json_file:
+        return json.load(json_file)
+
+
+def add_bookmark(arguments):
+    bookmark_url = search_terms[1]
+    bookmark_name = " ".join(search_terms[2:])
+
+    bookmark = {
+        "url": bookmark_url,
+        "name": bookmark_name
+    }
+
+    bookmarks.append(bookmark)
+
+    with open("bookmarks.json", "w+") as json_file:
+        json.dump(bookmarks, json_file)
+
+
+def show_bookmarks(arguments):
+    bookmarks_page = BookmarksPage()
+    bookmarks_page.display_page()
+    print()
+
+
+def show_history(arguments):
+    bookmarks_page = BookmarksPage()
+    bookmarks_page.display_page()
+    print()
+
+
+def search(arguments):
+    pass
 
 
 class Page(ABC):  # Create an abstract class
@@ -166,38 +213,61 @@ class HistoryPage(Page):
 
 
 class SearchBar:
-    def __init__(self):
-        console.input(
+    def parse_input(self):
+        query = console.input(
             "[#5185EC]S[/][#D85040]e[/][[#5185EC]a[/][#D8BE42]r[/][#58A55C]c[/][#D85040]h[/]: ")
 
-    def parse_input(self, query):
-        # Escape all special characters the user inputs, for the regex
-        query = re.escape(query)
+        # Replace all of the link references with the actual
+        for link_reference in re.findall(r"\*\d+", query):
+            link_number = int(link_reference[1:])
+            query.replace(link_reference, page_links[link_number])
 
-        "\\*\d+"
+        query.replace()
 
-        if query[0] == "-":  # A command
-            pass
+        # Use regex to get the command and arguments as a list
+        query_list = re.split(r'\s(-\w+)', query)
+        argument_list = query_list[1:]  # Just the arguements and their values
 
+        # Key/value pairs for every argument
+        arguments = {argument_list[index]: argument_list[index + 1]
+                     for index in range(len(argument_list), 2)}
 
-def get_bookmarks():
-    if not os.path.exists("./bookmarks.json"):
-        with open("bookmarks.json", "w+") as json_file:
-            json.dump([], json_file)
-            return []
+        requested_function = search
 
-    with open("bookmarks.json") as json_file:
-        return json.load(json_file)
+        if query_list[0] in COMMANDS:
+            requested_function = COMMANDS[query_list[0]]
+
+        # This is possible because python functions are first class objects
+        requested_function(arguments)
 
 
 if __name__ == "__main__":
+    COMMANDS = {
+        "--search": {
+            "function": search,
+            "accepted paramaters": ["-q", "-to"]
+        },
+        "--add-bookmark": {
+            "function": add_bookmark,
+            "accepted parameters": ["-l", "-n"],
+        },
+        "--show-bookmarks": {
+            "function": show_bookmarks,
+            "accepted parameters": [],
+        },
+        "--show-history": {
+            "function": show_history,
+            "accepted parameters": [],
+        }
+    }
+
     bookmarks = get_bookmarks()
 
     os.system("clear")
 
     # Create an event loop, of sorts
     while True:
-        query = input("Search: ")
+        query = input("Enter a command: ")
         search_terms = query.split()
 
         if search_terms[0] == "-nb" and len(search_terms) >= 3:
