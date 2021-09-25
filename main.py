@@ -53,8 +53,21 @@ def get_bookmarks():
 
 
 def add_bookmark(arguments):
-    bookmark_url = search_terms[1]
-    bookmark_name = " ".join(search_terms[2:])
+    # Check to see that no unaccepted arguments have been entered
+    for argument in arguments:
+        if argument not in COMMANDS["--search"]["accepted arguments"]:
+            console.print(f"[red]{argument} is not a valid argument[/]")
+            return
+
+    # Check that every required argument has been passed
+    for required_argument in COMMANDS["--search"]["required arguments"]:
+        if required_argument not in arguments:
+            console.print(
+                f"[red]{required_argument} is a required argument[/]")
+            return
+
+    bookmark_url = arguments["-l"]
+    bookmark_name = arguments["-n"]
 
     bookmark = {
         "url": bookmark_url,
@@ -68,19 +81,50 @@ def add_bookmark(arguments):
 
 
 def show_bookmarks(arguments):
+    # Check to see that no unaccepted arguments have been entered
+    for argument in arguments:
+        if argument not in COMMANDS["--search"]["accepted arguments"]:
+            console.print(f"[red]{argument} is not a valid argument[/]")
+            return
+
     bookmarks_page = BookmarksPage()
     bookmarks_page.display_page()
     print()
 
 
 def show_history(arguments):
+    # Check to see that no unaccepted arguments have been entered
+    for argument in arguments:
+        if argument not in COMMANDS["--search"]["accepted arguments"]:
+            console.print(f"[red]{argument} is not a valid argument[/]")
+            return
+
     bookmarks_page = BookmarksPage()
     bookmarks_page.display_page()
     print()
 
 
 def search(arguments):
-    pass
+    # Check to see that no unaccepted arguments have been entered
+    for argument in arguments:
+        if argument not in COMMANDS["--search"]["accepted arguments"]:
+            console.print(f"[red]{argument} is not a valid argument[/]")
+            return
+
+    # Check that every required argument has been passed
+    for required_argument in COMMANDS["--search"]["required arguments"]:
+        if required_argument not in arguments:
+            console.print(
+                f"[red]{required_argument} is a required argument[/]")
+            return
+
+    url = arguments["-q"]
+
+    text_only = "-to" in arguments
+
+    web_page = WebPage(url, text_only)
+    web_page.display_page()
+    print()
 
 
 class Page(ABC):  # Create an abstract class
@@ -100,10 +144,11 @@ class Page(ABC):  # Create an abstract class
 
 
 class WebPage(Page):
-    def __init__(self, url):
+    def __init__(self, url, text_only):
         super().__init__()
 
         self.url = url
+        self.text_only = text_only
 
         if len(history) == 0 or history[-1] != url:
             history.append(url)
@@ -217,27 +262,30 @@ class SearchBar:
         query = console.input(
             "[#5185EC]S[/][#D85040]e[/][[#5185EC]a[/][#D8BE42]r[/][#58A55C]c[/][#D85040]h[/]: ")
 
+        if query in ["-q", "--quit"]:
+            os.system("clear")
+            sys.exit()
+
         # Replace all of the link references with the actual
         for link_reference in re.findall(r"\*\d+", query):
             link_number = int(link_reference[1:])
             query.replace(link_reference, page_links[link_number])
 
-        query.replace()
-
         # Use regex to get the command and arguments as a list
         query_list = re.split(r'\s(-\w+)', query)
-        argument_list = query_list[1:]  # Just the arguements and their values
+        argument_list = query_list.insert(0, "-q")
+        requested_function = search
+
+        # The user is not searching without using the --search command
+        if query_list[0] in COMMANDS:
+            argument_list = query_list[1:]
+            requested_function = COMMANDS[query_list[0]]["function"]
 
         # Key/value pairs for every argument
         arguments = {argument_list[index]: argument_list[index + 1]
                      for index in range(len(argument_list), 2)}
 
-        requested_function = search
-
-        if query_list[0] in COMMANDS:
-            requested_function = COMMANDS[query_list[0]]
-
-        # This is possible because python functions are first class objects
+        # This is possible because python functions are first-class objects
         requested_function(arguments)
 
 
@@ -245,19 +293,23 @@ if __name__ == "__main__":
     COMMANDS = {
         "--search": {
             "function": search,
-            "accepted paramaters": ["-q", "-to"]
+            "accepted arguments": ["-q", "-to"],
+            "required arguments": ["-q"]
         },
         "--add-bookmark": {
             "function": add_bookmark,
-            "accepted parameters": ["-l", "-n"],
+            "accepted arguments": ["-l", "-n"],
+            "required arguments": ["-l", "-n"]
         },
         "--show-bookmarks": {
             "function": show_bookmarks,
-            "accepted parameters": [],
+            "accepted arguments": [],
+            "required arguments": []
         },
         "--show-history": {
             "function": show_history,
-            "accepted parameters": [],
+            "accepted arguments": [],
+            "required arguments": []
         }
     }
 
@@ -265,45 +317,11 @@ if __name__ == "__main__":
 
     os.system("clear")
 
+    search_bar = SearchBar()
+
     # Create an event loop, of sorts
     while True:
-        query = input("Enter a command: ")
-        search_terms = query.split()
-
-        if search_terms[0] == "-nb" and len(search_terms) >= 3:
-            bookmark_url = search_terms[1]
-            bookmark_name = " ".join(search_terms[2:])
-
-            bookmark = {
-                "url": bookmark_url,
-                "name": bookmark_name
-            }
-
-            bookmarks.append(bookmark)
-
-            with open("bookmarks.json", "w+") as json_file:
-                json.dump(bookmarks, json_file)
-
-        elif search_terms[0] == "-sb" and len(search_terms) == 1:
-            bookmarks_page = BookmarksPage()
-            bookmarks_page.display_page()
-            print()
-
-        elif search_terms[0] == "-sh" and len(search_terms) == 1:
-            history_page = HistoryPage()
-            history_page.display_page()
-            print()
-
-        elif search_terms[0] == "-q" and len(search_terms) == 1:
-            sys.exit()
-
-        else:
-            # For now, only supports urls (not organic searches)
-            url = query.join(search_terms)
-
-            web_page = WebPage(url)
-            web_page.display_page()
-            print()
+        search_bar.parse_input()
 
 # Test URL 1: https://www.crummy.com/software/BeautifulSoup/bs4/doc/#going-down
 # Test URL 2: http://motherfuckingwebsite.com
