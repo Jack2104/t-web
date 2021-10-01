@@ -234,9 +234,10 @@ class SearchBar:
 
         # Replace all of the link references with the actual
         for link_reference in re.findall(r"\*\d+", query):
-            link_number = int(link_reference[1:])
+            link_number = int(link_reference[1:]) - 1
             query.replace(link_reference, page_links[link_number])
 
+        # Split the query into two parts - the command, and all of the arguments
         command_and_arguments = query.split(' ', 1)
 
         command = command_and_arguments[0]
@@ -248,7 +249,7 @@ class SearchBar:
         requested_function = search
 
         # Default to the search command - used when no command is entered
-        arguments = {"-q": query}
+        arguments = {"-q": query, "-to": False}
 
         if command in COMMANDS:
             # Get the arguments and their values in as a dictionary
@@ -281,7 +282,7 @@ if __name__ == "__main__":
     COMMANDS = {
         "--search": {
             "function": search,
-            "accepted arguments": ["-q"],
+            "accepted arguments": ["-q", "-to"],
             "required arguments": ["-q"]
         },
         "--add-bookmark": {
