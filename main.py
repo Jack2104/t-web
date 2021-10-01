@@ -82,8 +82,7 @@ def show_history(arguments):
 
 def search(arguments):
     url = arguments["-q"]
-
-    text_only = "-to" in arguments
+    text_only = arguments["-to"]
 
     web_page = WebPage(url, text_only)
     web_page.display_page()
@@ -224,7 +223,7 @@ class SearchBar:
     def parse_input(self):
         # The colours are simply for aesthetic reasons
         query = console.input(
-            "[#5185EC]S[/][#D85040]e[/][[#5185EC]a[/][#D8BE42]r[/][#58A55C]c[/][#D85040]h[/]: ")
+            "[#5185EC]S[/][#D85040]e[/][#5185EC]a[/][#D8BE42]r[/][#58A55C]c[/][#D85040]h[/]: ")
 
         if query in ["-q", "--quit"]:
             os.system("clear")
