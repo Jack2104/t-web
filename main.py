@@ -2,6 +2,7 @@ import json
 import os
 import re
 import requests
+import shlex
 import sys
 
 from abc import ABC, abstractmethod
@@ -53,19 +54,6 @@ def get_bookmarks():
 
 
 def add_bookmark(arguments):
-    # Check to see that no unaccepted arguments have been entered
-    for argument in arguments:
-        if argument not in COMMANDS["--search"]["accepted arguments"]:
-            console.print(f"[red]{argument} is not a valid argument[/]")
-            return
-
-    # Check that every required argument has been passed
-    for required_argument in COMMANDS["--search"]["required arguments"]:
-        if required_argument not in arguments:
-            console.print(
-                f"[red]{required_argument} is a required argument[/]")
-            return
-
     bookmark_url = arguments["-l"]
     bookmark_name = arguments["-n"]
 
@@ -81,43 +69,18 @@ def add_bookmark(arguments):
 
 
 def show_bookmarks(arguments):
-    # Check to see that no unaccepted arguments have been entered
-    for argument in arguments:
-        if argument not in COMMANDS["--search"]["accepted arguments"]:
-            console.print(f"[red]{argument} is not a valid argument[/]")
-            return
-
     bookmarks_page = BookmarksPage()
     bookmarks_page.display_page()
     print()
 
 
 def show_history(arguments):
-    # Check to see that no unaccepted arguments have been entered
-    for argument in arguments:
-        if argument not in COMMANDS["--search"]["accepted arguments"]:
-            console.print(f"[red]{argument} is not a valid argument[/]")
-            return
-
     bookmarks_page = BookmarksPage()
     bookmarks_page.display_page()
     print()
 
 
 def search(arguments):
-    # Check to see that no unaccepted arguments have been entered
-    for argument in arguments:
-        if argument not in COMMANDS["--search"]["accepted arguments"]:
-            console.print(f"[red]{argument} is not a valid argument[/]")
-            return
-
-    # Check that every required argument has been passed
-    for required_argument in COMMANDS["--search"]["required arguments"]:
-        if required_argument not in arguments:
-            console.print(
-                f"[red]{required_argument} is a required argument[/]")
-            return
-
     url = arguments["-q"]
 
     text_only = "-to" in arguments
@@ -259,6 +222,7 @@ class HistoryPage(Page):
 
 class SearchBar:
     def parse_input(self):
+        # The colours are simply for aesthetic reasons
         query = console.input(
             "[#5185EC]S[/][#D85040]e[/][[#5185EC]a[/][#D8BE42]r[/][#58A55C]c[/][#D85040]h[/]: ")
 
@@ -271,19 +235,41 @@ class SearchBar:
             link_number = int(link_reference[1:])
             query.replace(link_reference, page_links[link_number])
 
-        # Use regex to get the command and arguments as a list
-        query_list = re.split(r'\s(-\w+)', query)
-        argument_list = query_list.insert(0, "-q")
+        command_and_arguments = query.split(' ', 1)
+
+        command = command_and_arguments[0]
+        argument_string = "" if len(
+            command_and_arguments) < 2 else command_and_arguments[1]
+
+        # Use shlex to get the arguments as a list
+        argument_list = shlex.split(argument_string)
         requested_function = search
 
-        # The user is not searching without using the --search command
-        if query_list[0] in COMMANDS:
-            argument_list = query_list[1:]
-            requested_function = COMMANDS[query_list[0]]["function"]
+        # Default to the search command - used when no command is entered
+        arguments = {"-q": query, "-to": False}
 
-        # Key/value pairs for every argument
-        arguments = {argument_list[index]: argument_list[index + 1]
-                     for index in range(len(argument_list), 2)}
+        if command in COMMANDS:
+            # Get the arguments and their values in as a dictionary
+            arguments = {k: True if v.startswith('-') else v
+                         for k, v in zip(argument_list, argument_list[1:] + ["--"]) if k.startswith('-')}
+
+            argument_config = COMMANDS[argument_list[0]]
+
+            # Check to see that no unaccepted arguments have been entered
+            for argument in arguments:
+                if argument not in argument_config["accepted arguments"]:
+                    console.print(
+                        f"[red]{argument} is not a valid argument[/]")
+                    return
+
+            # Check that every required argument has been passed
+            for required_argument in argument_config["required arguments"]:
+                if required_argument not in arguments:
+                    console.print(
+                        f"[red]{required_argument} is a required argument[/]")
+                    return
+
+            requested_function = argument_config["function"]
 
         # This is possible because python functions are first-class objects
         requested_function(arguments)
