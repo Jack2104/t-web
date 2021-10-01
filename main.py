@@ -84,7 +84,7 @@ def show_history(arguments):
 
 def search(arguments):
     url = arguments["-q"]
-    text_only = arguments["-to"]
+    text_only = "-to" in arguments
 
     web_page = WebPage(url, text_only)
     web_page.display_page()
@@ -125,6 +125,7 @@ class WebPage(Page):
 
         tag_content = ""
         hypertext = []
+
         # We only want the top-level children
         children = tag.find_all(recusive=False)
 
@@ -247,7 +248,7 @@ class SearchBar:
         requested_function = search
 
         # Default to the search command - used when no command is entered
-        arguments = {"-q": query, "-to": False}
+        arguments = {"-q": query}
 
         if command in COMMANDS:
             # Get the arguments and their values in as a dictionary
@@ -260,14 +261,14 @@ class SearchBar:
             for argument in arguments:
                 if argument not in command_config["accepted arguments"]:
                     console.print(
-                        f"[red]{argument} is not a valid argument[/]")
+                        f"[red]{argument} is not a valid argument[/]\n")
                     return
 
             # Check that every required argument has been passed
             for required_argument in command_config["required arguments"]:
                 if required_argument not in arguments:
                     console.print(
-                        f"[red]{required_argument} is a required argument[/]")
+                        f"[red]{required_argument} is a required argument[/]\n")
                     return
 
             requested_function = command_config["function"]
@@ -280,7 +281,7 @@ if __name__ == "__main__":
     COMMANDS = {
         "--search": {
             "function": search,
-            "accepted arguments": ["-q", "-to"],
+            "accepted arguments": ["-q"],
             "required arguments": ["-q"]
         },
         "--add-bookmark": {
