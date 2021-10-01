@@ -252,23 +252,23 @@ class SearchBar:
             arguments = {k: True if v.startswith('-') else v
                          for k, v in zip(argument_list, argument_list[1:] + ["--"]) if k.startswith('-')}
 
-            argument_config = COMMANDS[argument_list[0]]
+            command_config = COMMANDS[command]
 
             # Check to see that no unaccepted arguments have been entered
             for argument in arguments:
-                if argument not in argument_config["accepted arguments"]:
+                if argument not in command_config["accepted arguments"]:
                     console.print(
                         f"[red]{argument} is not a valid argument[/]")
                     return
 
             # Check that every required argument has been passed
-            for required_argument in argument_config["required arguments"]:
+            for required_argument in command_config["required arguments"]:
                 if required_argument not in arguments:
                     console.print(
                         f"[red]{required_argument} is a required argument[/]")
                     return
 
-            requested_function = argument_config["function"]
+            requested_function = command_config["function"]
 
         # This is possible because python functions are first-class objects
         requested_function(arguments)
