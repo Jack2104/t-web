@@ -67,7 +67,7 @@ def add_bookmark(arguments):
     with open("bookmarks.json", "w+") as json_file:
         json.dump(bookmarks, json_file)
 
-    console.print("[green]Successfully added boorkmark[/]")
+    console.print("[green]Successfully added boorkmark[/]\n")
 
 
 def show_bookmarks(arguments):
@@ -77,8 +77,8 @@ def show_bookmarks(arguments):
 
 
 def show_history(arguments):
-    bookmarks_page = BookmarksPage()
-    bookmarks_page.display_page()
+    history_page = HistoryPage()
+    history_page.display_page()
     print()
 
 
