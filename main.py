@@ -67,7 +67,7 @@ def add_bookmark(arguments):
     with open("bookmarks.json", "w+") as json_file:
         json.dump(bookmarks, json_file)
 
-    console.print("[green]Successfully added boorkmark[/]\n")
+    console.print("[green]Successfully added bookmark[/]\n")
 
 
 def show_bookmarks(arguments):
@@ -94,7 +94,8 @@ def search(arguments):
 class Page(ABC):  # Create an abstract class
     @abstractmethod
     def __init__(self):
-        self.page_links = []
+        global page_links
+        page_links = []
 
     @abstractmethod
     def get_page_content(self):
@@ -109,6 +110,9 @@ class Page(ABC):  # Create an abstract class
 
 class WebPage(Page):
     def __init__(self, url, text_only):
+        global page_links
+        page_links = []
+
         super().__init__()
 
         self.url = url
@@ -118,16 +122,18 @@ class WebPage(Page):
             history.append(url)
 
     def parse_tag(self, tag):
+        global page_links
+
         # This will occur if the link is standalone (i.e. not in-line)
         if tag.name == "a":
-            self.page_links.append(tag.get("href"))
-            return TAG_STYLES["a"] % (len(self.page_links), tag.text) + "\n\n"
+            page_links.append(tag.get("href"))
+            return TAG_STYLES["a"] % (len(page_links), tag.text) + "\n\n"
 
         tag_content = ""
         hypertext = []
 
         # We only want the top-level children
-        children = tag.find_all(recusive=False)
+        children = tag.find_all(recursive=False)
 
         # Get all of the in-line links (<a> tags)
         if tag.name in TAG_STYLES and children:
@@ -135,7 +141,7 @@ class WebPage(Page):
             for child_tag in tag.find_all():
                 if child_tag.name == "a":
                     hypertext.append(child_tag.text)
-                    self.page_links.append(child_tag.get("href"))
+                    page_links.append(child_tag.get("href"))
 
         if tag.name in TAG_STYLES:
             tag_content = TAG_STYLES[tag.name] % tag.text
@@ -143,7 +149,7 @@ class WebPage(Page):
             # Loop through every in-line link, re-format it, then add it back in to the content
             for index in range(len(hypertext)):
                 # Get the number of the current link (note: not the index in page_links)
-                link_number = len(self.page_links) - len(hypertext) + index + 1
+                link_number = len(page_links) - len(hypertext) + index + 1
                 new_link = TAG_STYLES["a"] % (link_number, hypertext[index])
 
                 tag_content = tag_content.replace(hypertext[index], new_link)
@@ -182,8 +188,8 @@ class BookmarksPage(Page):
     def __init__(self):
         super().__init__()
 
-        for bookmark in bookmarks:
-            self.page_links = bookmark["url"]
+        global page_links
+        page_links = [bookmark["url"] for bookmark in bookmarks]
 
     def format_bookmark(self, bookmark, bookmark_number):
         return f"[green]({bookmark_number}) {bookmark['name']}[/] [#3b9dff]\n{bookmark['url']}[/]"
@@ -199,7 +205,7 @@ class BookmarksPage(Page):
                 content += "\n\n"
 
         if len(bookmarks) == 0:
-            content = "[green]You don't have any bookmarks yet! Try adding one with the -nb command[/]"
+            content = "[green]You don't have any bookmarks yet! Try adding one with the --add-bookmark command[/]"
 
         return content
 
@@ -207,7 +213,9 @@ class BookmarksPage(Page):
 class HistoryPage(Page):
     def __init__(self):
         super().__init__()
-        self.page_links = history
+
+        global page_links
+        page_links = history
 
     def get_page_content(self):
         content = TAG_STYLES["h1"] % "History"
@@ -235,7 +243,7 @@ class SearchBar:
         # Replace all of the link references with the actual
         for link_reference in re.findall(r"\*\d+", query):
             link_number = int(link_reference[1:]) - 1
-            query.replace(link_reference, page_links[link_number])
+            query = query.replace(link_reference, page_links[link_number])
 
         # Split the query into two parts - the command, and all of the arguments
         command_and_arguments = query.split(' ', 1)
@@ -316,3 +324,4 @@ if __name__ == "__main__":
 # Test URL 2: http://motherfuckingwebsite.com
 # Test URL 3: https://perfectmotherfuckingwebsite.com
 # Test URL 4: http://txti.es/dj8g2 (edit with code fml13)
+# Test URL 5: https://txti.es/qam1u (edit with code 4k6qx)
