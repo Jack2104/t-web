@@ -82,6 +82,12 @@ def show_history(arguments):
     print()
 
 
+def show_help(arguments):
+    help_page = HelpPage()
+    help_page.display_page()
+    print()
+
+
 def search(arguments):
     url = arguments["-q"]
     text_only = "-to" in arguments
@@ -239,6 +245,33 @@ class HistoryPage(Page):
         return content
 
 
+class HelpPage(Page):
+    def __init__(self):
+        super().__init__()
+
+    def get_page_content(self):
+        return """[bold green]Help[/]
+[italics]t-web is a terminal-based web browser.
+Type a command into the search box, or directly enter a URL.[/]
+
+[underline]COMMAND[/]                   [underline]ARGUMENTS[/]
+[bold]--search[/]                  query:       -q url
+                          text only:   -to
+                          no footer:   -nf
+                          no nav:      -nn
+
+[bold]--add-bookmark[/]            name:        -n "name"
+                          link:        -l [url]
+
+[bold]--show-bookmarks[/]
+
+[bold]--show-history[/]
+
+[bold]--help[/]
+
+[bold]--quit[/]"""
+
+
 class SearchBar:
     def parse_input(self):
         # The colours are simply for aesthetic reasons
@@ -316,12 +349,19 @@ if __name__ == "__main__":
             "function": show_history,
             "accepted arguments": [],
             "required arguments": []
+        },
+        "--help": {
+            "function": show_help,
+            "accepted arguments": [],
+            "required arguments": []
         }
     }
 
     bookmarks = get_bookmarks()
 
     os.system("clear")
+
+    show_help(None)
 
     search_bar = SearchBar()
 
