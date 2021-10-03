@@ -85,8 +85,10 @@ def show_history(arguments):
 def search(arguments):
     url = arguments["-q"]
     text_only = "-to" in arguments
+    no_footer = "-nf" in arguments
+    no_nav = "-nn" in arguments
 
-    web_page = WebPage(url, text_only)
+    web_page = WebPage(url, text_only, no_footer, no_nav)
     web_page.display_page()
     print()
 
@@ -109,7 +111,7 @@ class Page(ABC):  # Create an abstract class
 
 
 class WebPage(Page):
-    def __init__(self, url, text_only):
+    def __init__(self, url, text_only, no_footer, no_nav):
         global page_links
         page_links = []
 
@@ -117,6 +119,8 @@ class WebPage(Page):
 
         self.url = url
         self.text_only = text_only
+        self.no_footer = no_footer
+        self.no_nav = no_nav
 
         if len(history) == 0 or history[-1] != url:
             history.append(url)
@@ -144,6 +148,9 @@ class WebPage(Page):
                     page_links.append(child_tag.get("href"))
 
         if tag.name in TAG_STYLES:
+            if tag.name == "a" and self.text_only:
+                return "\n"
+
             tag_content = TAG_STYLES[tag.name] % tag.text
 
             # Loop through every in-line link, re-format it, then add it back in to the content
@@ -153,6 +160,8 @@ class WebPage(Page):
                 new_link = TAG_STYLES["a"] % (link_number, hypertext[index])
 
                 tag_content = tag_content.replace(hypertext[index], new_link)
+        elif (tag.name == "footer" and self.no_footer) or (tag.name == "nav" and self.no_nav):
+            tag_content = "\n"
         elif children:
             # Recursively call this function to parse all of the children
             for index in range(len(children)):
@@ -290,7 +299,7 @@ if __name__ == "__main__":
     COMMANDS = {
         "--search": {
             "function": search,
-            "accepted arguments": ["-q", "-to"],
+            "accepted arguments": ["-q", "-to", "-nf", "-nn"],
             "required arguments": ["-q"]
         },
         "--add-bookmark": {
